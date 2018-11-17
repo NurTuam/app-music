@@ -10,9 +10,14 @@
     "build": "node build/build.js"
   },
   "dependencies": {
+    "Base64": "^1.0.1",
     "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
     "better-scroll": "^1.13.2",
+    "good-storage": "^1.1.0",
+    "js-base64": "^2.4.9",
+    "lyric-parser": "^1.0.1",
+    "querystring": "^0.2.0",
     "stylus": "^0.54.5",
     "stylus-loader": "^3.0.2",
     "vue": "^2.5.2",

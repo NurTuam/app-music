@@ -28,6 +28,7 @@
 
 <script>
 	import Scroll from "../scroll/scroll"
+	import loading from "../loading/loading"
 	const TITLE_HEIGHT=30;
 	const ANCHOR_HEIGHT=18;
 	export default{
@@ -54,20 +55,21 @@
 			},
 			fixedtitle(){
 				if(this.scrollY>0){
-					return 
+					return ''
 				}
-				return this.shortcutlist[this.currentindex]?this.shortcutlist[this.currentindex]:"";
+				return this.list[this.currentindex]?this.list[this.currentindex].title:""
 			}
 		},
 		components:{
-			Scroll
+			Scroll,
+			loading
 		},
 		methods:{
-			scroll(pos){
-//				console.log(pos.y)
-				console.log(this.scrollY)
-                this.scrollY=pos.y;
-			},
+			scroll(pos) {
+//			    console.log(pos.y)
+        		this.scrollY = pos.y;
+//        		console.log(this.scrollY)
+      		},
 			_calculateHeight(){
 				this.listHeight=[];
 				const list =this.$refs.listgroup
@@ -76,7 +78,7 @@
 				for(let i=0;i<list.length;i++){
 					let item=list[i];
 					height+=item.clientHeight;
-					this.listHeight.push(height)
+					this.listHeight.push(height);
 				}
 //				console.log(this.listHeight)
 			},
@@ -109,7 +111,7 @@
 				this.$refs.listview.scrollToElement(this.$refs.listgroup[index]);
 			},
 			selectitem(singer){
-				this.$emit('select',singer);
+				this.$emit('select',singer)
 			}
 		},
 		created(){
@@ -118,17 +120,23 @@
 			this.touch={}
 		},
 		mounted(){
-			this._calculateHeight();
+			this._calculateHeight()
 		},
 		watch:{
 			list(){
 				this.$nextTick(()=>{
-					this._calculateHeight();
+					this._calculateHeight()
 				})
 			},
 			scrollY(newY){
 				//检测当前滑动的距离 根据滑动的距离计算出当前的index
-				const listHeight=this.listHeight;  //24  0~23
+				const listHeight=this.listHeight;//24  0~23
+				//当滚动到上部  newY>0
+	            if(newY>0){
+	            	this.currentindex=0;
+	            	return;
+	            }
+	            //在中间滚动
 				for(let i=0;i<listHeight.length-1;i++){
 					let startHeight=listHeight[i];
 					let endHeight=listHeight[i+1];
@@ -139,6 +147,8 @@
 						return;
 					}
 				}
+				//当滚动到底部，-newY肯定大于最后一个元素的上限
+				this.currentindex=listHeight.length-2;
 			},
 			diff(newVal){
 				//观测下一个分组距离顶部的距离
@@ -147,8 +157,8 @@
 					return;
 				}
 				this.fixtop=fixtop;
-				this.$refs.fixed.style.transform=`translated(0,${fixtop}px,0)`;
-				this.$refs.fixed.style.webkitTransform=`translated(0,${fixtop}px,0)`;
+				this.$refs.fixed.style.transform=`translate3d(0,${fixtop}px,0)`;
+                this.$refs.fixed.style.webkitTransform=`translate3d(0,${fixtop}px,0)`;
 			}
 		}
 	}

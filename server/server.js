@@ -1,7 +1,9 @@
-const url="https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg";
+//const url="https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg";
 
 const express=require('express');
+const fs=require("fs");
 const axios=require("axios");
+const queryString = require('querystring');
 const app=express();
 const Router=express.Router();
 
@@ -19,6 +21,32 @@ Router.get('/getList',(req,res)=>{
 //		console.log(response)
         res.json(response.data)
 	})
+})
+Router.get('/getLyric',(req,res)=>{
+      res.setHeader('Access-Control-Allow-Origin','*');
+      req.query.jsonpCallback="fn";
+//    console.log(req.query)
+      const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg'+'?'+queryString.stringify(req.query);
+//    const url = 'https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric_new.fcg';
+//    console.log(url)
+    axios({
+  		method: 'get',
+  		url:url,
+  		headers: {
+  			host:"c.y.qq.com",
+  			referer: "https://y.qq.com/"
+  		}
+	}).then((response)=>{
+//		console.log(response)
+//			res.json(response.data)
+        let string = response.data;
+        let start = string.indexOf('{');
+        let end = string.lastIndexOf('}')+1;   //“)”不加一
+        string = string.slice(start,end);
+//      console.log(string)
+        res.json(string)
+      
+		})
 })
 
 app.use('/api',Router)

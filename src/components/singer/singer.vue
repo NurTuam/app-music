@@ -1,6 +1,7 @@
 <template>
 	<div class="singer">
 		<list-view :list="singers" v-if="singers.length" @select="selectsinger"></list-view>
+		<router-view></router-view>
 	</div>
 </template>
 
@@ -8,12 +9,14 @@
 	import listView from "../../base/listview/listview"
 	import {url,callback,ERR_OK,params} from "../../api/getsingerList"
 	import singer from "../../common/js/singer"
+	import {mapMutations} from "vuex"
 	const HOT_NAME ="热门";   //定一个常量，方便修改  通常为大写
 	const HOT_SINGER_LEN=10;
  	export default{
 		data(){
 			return{
-				singers:[]
+				singers:[],
+				singer:{}
 			}
 		},
 		components:{
@@ -27,14 +30,14 @@
 				}).then((res)=>{
 //					console.log(res.body)
                     if(res.body.code==ERR_OK){
-                    	this.singers=this._normalsinger(res.data.data.list);
+                    	this.singers=this._normallizeSinger(res.data.data.list);
 //                  	console.log(res.data.data.list)
 //                      console.log(this.singers)
                     }
      
 				})
 			},
-			_normalsinger(list){
+			_normallizeSinger(list){
 				let map = {
 					hot:{
 						title:HOT_NAME,
@@ -85,8 +88,16 @@
 				return hot.concat(ret);
 			},
 			selectsinger(singer){
-				console.log(singer)
-			}
+//				console.log(singer)
+//				this.setSinger('张惠妹')
+                this.$router.push({
+                	path:`/singer/${singer.id}`
+                });
+                this.setSinger(singer);
+			},
+			...mapMutations({
+				'setSinger':"SET_SINGER"
+			})
 		},
 		created(){
 			this._getsingerlist();
