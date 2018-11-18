@@ -26,6 +26,52 @@ export const randomPlay=function({commit},{list}){
   	commit(types.SET_PLAYING_STATE,true);
 }
 
+//添加歌曲列表的歌曲
+export const insertSong=function({commit,state},song){
+	let playlist=state.playList.slice();           //正常播放列表下标
+	let sequenceList=state.sequenceList.slice();  //顺序播放列表下标
+	let currentIndex=state.currentIndex;  //当前歌曲
+	//记录当前歌曲
+	let currentSong=playlist[currentIndex];
+	
+	//查找当前列表是否有等待插入的歌曲，如果有就返回其索引
+	let fpIndex=findIndex(playlist,song);
+	currentIndex++;
+	
+	//插进去
+	playlist.splice(currentIndex,0,song);
+	
+	//如果已有
+	if(fpIndex>0){
+		//如果当前序号大于列表的序号
+		if(currentIndex>fpIndex){
+			playlist.splice(fpIndex,1);
+			currentIndex--;
+		}else{
+			playlist.splice(fpIndex+1,1);
+		}
+	}
+	
+	//随机播放的
+	let currentSIndex=findIndex(sequenceList,currentSong)+1;
+	let fsIndex=findIndex(sequenceList,song);
+	sequenceList.splice(currentSIndex,0,song);
+	
+	if(fsIndex>0){
+		if(currentSIndex>fsIndex){
+			sequenceList.splice(fsIndex,1);	
+		}else{
+			sequenceList.splice(fsIndex+1,1);
+		}
+	}
+	
+	commit(types.SET_PLAYLIST, playlist);
+  	commit(types.SET_SEQUENCE_LIST, sequenceList);
+  	commit(types.SET_CURRENT_INDEX, currentIndex);
+  	commit(types.SET_FULL_SCREEN, true);
+  	commit(types.SET_PLAYING_STATE, true);
+}
+
 //删除播放列表的歌曲
 export const deleteSong=function({commit,state},song){
 	let playlist=state.playList.slice();           //正常播放列表下标

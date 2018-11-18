@@ -18,16 +18,153 @@
 </template>
 
 <script>
-	import {url,params,ERR_OK,callback} from "../../api/getSearch"
+	import objobj from "../../api/getSearch"
 	import singer from "../../common/js/singer"
 	import Loading from "../../base/loading/loading"
 	import Scroll from "../../base/scroll/scroll"
 	import NoResult from "../../base/noResult/noResult"
+	import createSong from "../../common/js/song"
+	
+	import {mapMutations,mapActions} from "vuex"
+	
+	const TYPE_SINGER='singer';
+	const perpage=20;
 	export default{
+		data(){
+			return{
+				page:1,
+				result:[],
+				pullUp:true,
+				hasMore:true,
+				beforeScroll:true
+			}
+		},
+		props:{
+			query:{
+				type:String,
+				default:""
+			},
+			showSinger:{
+				type:Boolean,
+				default:true
+			}
+		},
 		components:{
 			Scroll,
 			NoResult,
 			Loading
+		},
+		methods:{
+			refresh(){
+				this.$refs.suggest.refresh();
+			},
+			listScroll(){
+				this.$emit('listScroll');
+			},
+			search(){
+				this.page=1;
+				this.hasMore=true;
+				this.$refs.suggest.scrollTo(0,0);
+//				search(this.query,this.page,this.showSinger,perpage)
+//        .then(res=>{
+//          if (res.code==ERR_OK) {
+//          	console.log(res.data)
+//            this.result=this._getResult(res.data);
+//            this._checkHasMore(res.data);
+//          	}
+//        	  })
+                let aa=this.query;
+                let bb=this.page;
+                let cc=this.showSinger;
+                let dd=this.perpage;
+                this.$http.jsonp(objobj.url,{
+                	params:{...objobj.params,w:aa,p:bb,cc,n:dd},
+                	'jsonp':objobj.callback
+                }).then((res)=>{
+                	console.log(res.data);
+                })
+			},
+			_getResult(data){
+				let ret=[];
+				if(data.zhida&&data.zhida.singerid){
+					ret.push({
+						...data.zhida,
+						...{type:TYPE_SINGER}
+					})
+				}
+				if(data.song){
+					ret=ret.concat(this._normalizeSongs(data.song.list));
+				}
+				return ret;
+			},
+			_normalizeSongs(list){
+				let ret=[];
+				list.forEach((musicData)=>{
+					if(musicData.songid&&musicData.albummid){
+						ret.push(createSong(musicData));
+					}
+				})
+				return ret;
+			},
+			_checkHasMore(data){
+				const song=data.song;
+				if(!song.list.length||(song.curnum+song.curpage*perpage)>song.totalnum){
+					this.hasMore=false;
+				}
+			},
+			selectItem(item){
+				if(item.type==TYPE_SINGER){
+					const singer=new Singer({
+						id:item.singermid,
+						name:item.singername
+					})
+					this.$router.push({
+						path:`/search/${singer.id}`
+					})
+					this.setSinger(singer);
+				}else{
+					this.insertSong(item);
+				}
+				this.$emit('select');
+			},
+			getIconCls(item){
+				if(item.type==TYPE_SINGER){
+					return 'icon-mine';
+				}else{
+					return 'icon-music';
+				}
+			},
+			getDisplayName(item){
+				if(item.type==TYPE_SINGER){
+					return item.singername;
+				}else{
+					return `${item.name}-${item.singer}`;
+				}
+			},
+			searchMore(){
+				if(!this.hasMore){
+					return;
+				}
+				this.page++;
+//				search(this.query,this.page,this.showSinger,perpage)
+//        .then(res=>{
+//          if (res.code==ERR_OK) {
+//            this.result=this.result.concat(this._getResult(res.data));
+//            this._checkHasMore(res.data);
+//          }
+//        })
+			},
+			...mapMutations({
+				'setSinger':"SET_SINGER"
+			}),
+			...mapActions([
+				'insertSong'
+			])
+		},
+		watch:{
+			query(){
+				this.search();
+			}
 		}
 	}
 </script>
